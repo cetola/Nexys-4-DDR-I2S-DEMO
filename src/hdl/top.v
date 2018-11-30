@@ -22,11 +22,12 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module top #(
-	parameter NUMBER_OF_SWITCHES = 4,
+	parameter NUMBER_OF_VOL_SWITCHES = 4,
 	parameter RESET_POLARITY = 0
 ) (
     input wire       clk,
-    input wire [NUMBER_OF_SWITCHES-1:0] sw,
+    input wire [NUMBER_OF_VOL_SWITCHES-1:0] sw,
+    input wire       distort_sw,
     input wire       reset,
     
     output wire tx_mclk,
@@ -82,11 +83,12 @@ module top #(
     );
     
     axis_volume_controller #(
-		.SWITCH_WIDTH(NUMBER_OF_SWITCHES),
+		.SWITCH_WIDTH(NUMBER_OF_VOL_SWITCHES),
 		.DATA_WIDTH(24)
 	) m_vc (
         .clk(axis_clk),
         .sw(sw),
+        .distort_sw(distort_sw),
         
         .s_axis_data(axis_rx_data),
         .s_axis_valid(axis_rx_valid),
