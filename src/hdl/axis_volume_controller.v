@@ -24,7 +24,6 @@ module axis_volume_controller #(
 ) (
     input wire clk,
     input wire [SWITCH_WIDTH-1:0] sw,
-    input wire distort_sw,
     
     //AXIS SLAVE INTERFACE
     input  wire [DATA_WIDTH-1:0] s_axis_data,
@@ -41,14 +40,10 @@ module axis_volume_controller #(
     localparam MULTIPLIER_WIDTH = 24;
     reg [MULTIPLIER_WIDTH+DATA_WIDTH-1:0] data [1:0];
         
+    //TODO: this is gross. use the debounce module instead.
     reg [SWITCH_WIDTH-1:0] sw_sync_r [2:0];
     wire [SWITCH_WIDTH-1:0] sw_sync = sw_sync_r[2];
     
-    //TODO: this is gross. use the debounce module instead.
-    reg d_sw_sync_r [2:0];
-    wire d_sw_sync = d_sw_sync_r[2];
-    
-//    wire [SWITCH_WIDTH:0] m = {1'b0, sw_sync} + 1;
     reg [MULTIPLIER_WIDTH:0] multiplier = 'b0; // range of 0x00:0x10 for width=4
     
     wire m_select = m_axis_last;
@@ -60,21 +55,12 @@ module axis_volume_controller #(
     wire s_new_packet = (s_new_word == 1'b1 && s_axis_last == 1'b1) ? 1'b1 : 1'b0;
     reg s_new_packet_r = 1'b0;
     
-    always@(posedge clk) begin
+    always@(posedge clk) begin        //TODO: OMG, seriously, it's gross.
+
         sw_sync_r[2] <= sw_sync_r[1];
         sw_sync_r[1] <= sw_sync_r[0];
         sw_sync_r[0] <= sw;
-        //TODO: OMG, seriously, it's gross.
-        d_sw_sync_r[2] <= d_sw_sync_r[1];
-        d_sw_sync_r[1] <= d_sw_sync_r[0];
-        d_sw_sync_r[0] <= distort_sw;
-        
-        
-//        if (&sw_sync == 1'b1)
-//            multiplier <= {1'b1, {MULTIPLIER_WIDTH{1'b0}}};
-//        else
-            // multiplier <= {1'b0, sw, {MULTIPLIER_WIDTH-SWITCH_WIDTH{1'b0}}} + 1;
-            multiplier <= {sw_sync,{MULTIPLIER_WIDTH{1'b0}}} / {SWITCH_WIDTH{1'b1}};
+        multiplier <= {sw_sync,{MULTIPLIER_WIDTH{1'b0}}} / {SWITCH_WIDTH{1'b1}};
             
         s_new_packet_r <= s_new_packet;
     end
@@ -85,12 +71,6 @@ module axis_volume_controller #(
         else if (s_new_packet_r == 1'b1) begin
             data[0] <= $signed(data[0]) * multiplier; // core volume control algorithm, infers a DSP48 slice
             data[1] <= $signed(data[1]) * multiplier;
-            if (d_sw_sync && data[0][DATA_WIDTH-1] === 1'b1) begin
-                data[0] <= ~data[0];
-            end
-            if (d_sw_sync && data[1][DATA_WIDTH-1] === 1'b1) begin
-                data[1] <= ~data[1];
-            end
         end
         
     always@(posedge clk)

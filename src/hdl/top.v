@@ -50,6 +50,8 @@ module top #(
     wire axis_rx_valid;
     wire axis_rx_ready;
     wire axis_rx_last;
+    
+    wire [23:0] volume_data;
 
 	wire resetn = (reset == RESET_POLARITY) ? 1'b0 : 1'b1;
 	
@@ -88,16 +90,24 @@ module top #(
 	) m_vc (
         .clk(axis_clk),
         .sw(sw),
-        .distort_sw(distort_sw),
         
         .s_axis_data(axis_rx_data),
         .s_axis_valid(axis_rx_valid),
         .s_axis_ready(axis_rx_ready),
         .s_axis_last(axis_rx_last),
         
-        .m_axis_data(axis_tx_data),
+        .m_axis_data(volume_data),
         .m_axis_valid(axis_tx_valid),
         .m_axis_ready(axis_tx_ready),
         .m_axis_last(axis_tx_last)
+    );
+    
+    distortion #(
+        .DATA_WIDTH(24)
+    ) m_dist (
+        .clk(axis_clk),
+        .distort_sw(distort_sw),
+        .rx_data(volume_data),
+        .tx_data(axis_tx_data)
     );
 endmodule
