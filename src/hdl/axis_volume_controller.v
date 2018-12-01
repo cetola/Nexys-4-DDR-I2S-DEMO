@@ -2,7 +2,7 @@
 `default_nettype none
 //////////////////////////////////////////////////////////////////////////////////
 // Company: Digilent
-// Engineer: Arthur Brown
+// Engineer: Arthur Brown edited by Stephano Cetola
 // 
 // Create Date: 03/23/2018 01:23:15 PM
 // Module Name: axis_volume_controller
@@ -11,6 +11,8 @@
 //              the value of the switches, taken to represent the range 0.0:1.0, then sent over the
 //              master interface. Reception of data on the slave interface is halted while processing and
 //              transfer is taking place.
+//              SC:
+//              Added debounce.
 // 
 // Revision:
 // Revision 0.01 - File Created
@@ -39,10 +41,6 @@ module axis_volume_controller #(
 );
     localparam MULTIPLIER_WIDTH = 24;
     reg [MULTIPLIER_WIDTH+DATA_WIDTH-1:0] data [1:0];
-        
-    //TODO: this is gross. use the debounce module instead.
-    reg [SWITCH_WIDTH-1:0] sw_sync_r [2:0];
-    wire [SWITCH_WIDTH-1:0] sw_sync = sw_sync_r[2];
     
     reg [MULTIPLIER_WIDTH:0] multiplier = 'b0; // range of 0x00:0x10 for width=4
     
@@ -56,12 +54,7 @@ module axis_volume_controller #(
     reg s_new_packet_r = 1'b0;
     
     always@(posedge clk) begin        //TODO: OMG, seriously, it's gross.
-
-        sw_sync_r[2] <= sw_sync_r[1];
-        sw_sync_r[1] <= sw_sync_r[0];
-        sw_sync_r[0] <= sw;
-        multiplier <= {sw_sync,{MULTIPLIER_WIDTH{1'b0}}} / {SWITCH_WIDTH{1'b1}};
-            
+        multiplier <= {sw,{MULTIPLIER_WIDTH{1'b0}}} / {SWITCH_WIDTH{1'b1}};
         s_new_packet_r <= s_new_packet;
     end
     

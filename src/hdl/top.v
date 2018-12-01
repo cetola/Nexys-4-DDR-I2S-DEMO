@@ -25,10 +25,10 @@ module top #(
 	parameter NUMBER_OF_VOL_SWITCHES = 4,
 	parameter RESET_POLARITY = 0
 ) (
-    input wire       clk,
-    input wire [NUMBER_OF_VOL_SWITCHES-1:0] sw,
-    input wire       distort_sw,
-    input wire       reset,
+    input wire          clk,
+    input wire          [15:0] sw,
+    input wire          BTNU, BTND, BTNL, BTNC, BTNR,
+    input wire          reset,
     
     output wire tx_mclk,
     output wire tx_lrck,
@@ -40,6 +40,8 @@ module top #(
     input  wire rx_data
 );
     wire axis_clk;
+    wire clk_out50;
+    wire clk_out100;
     
     wire [23:0] axis_tx_data;
     wire axis_tx_valid;
@@ -55,10 +57,23 @@ module top #(
 
 	wire resetn = (reset == RESET_POLARITY) ? 1'b0 : 1'b1;
 	
+	wire [5:0] btn_db;
+    wire [15:0] sw_db;
+	
     clk_wiz_0 m_clk (
         .clk_in1(clk),
-        .axis_clk(axis_clk)
+        .axis_clk(axis_clk),
+        .clk_out100(clk_out100),
+        .clk_out50(clk_out50)
     );
+    
+    debounce debounce(
+        .clk(clk_out50),
+        .pbtn_in({resetn,BTNU,BTND,BTNL,BTNC,BTNR}),
+        .switch_in(sw),
+        .pbtn_db(btn_db),
+        .swtch_db(sw_db));
+
 
     axis_i2s2 m_i2s2 (
         .axis_clk(axis_clk),
@@ -89,7 +104,7 @@ module top #(
 		.DATA_WIDTH(24)
 	) m_vc (
         .clk(axis_clk),
-        .sw(sw),
+        .sw(sw_db[NUMBER_OF_VOL_SWITCHES-1:0]),
         
         .s_axis_data(axis_rx_data),
         .s_axis_valid(axis_rx_valid),
@@ -106,7 +121,7 @@ module top #(
         .DATA_WIDTH(24)
     ) m_dist (
         .clk(axis_clk),
-        .distort_sw(distort_sw),
+        .distort_sw(sw_db[15]),
         .rx_data(volume_data),
         .tx_data(axis_tx_data)
     );
