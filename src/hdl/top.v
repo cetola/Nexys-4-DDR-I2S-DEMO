@@ -54,12 +54,13 @@ module top #(
     wire axis_rx_last;
     
     wire [23:0] volume_data;
+    wire [23:0] distort_data;
 
 	wire resetn = (reset == RESET_POLARITY) ? 1'b0 : 1'b1;
 	
 	wire [5:0] btn_db;
     wire [15:0] sw_db;
-	
+    
     clk_wiz_0 m_clk (
         .clk_in1(clk),
         .axis_clk(axis_clk),
@@ -123,6 +124,16 @@ module top #(
         .clk(clk_out50),
         .distort_sw(sw_db[15]),
         .rx_data(volume_data),
+        .tx_data(distort_data)
+    );
+        
+    swap #(
+        .DATA_WIDTH(24)
+    ) m_swap (
+        .clk(clk_out50),
+        .swap_sw(sw_db[14]),
+        .rx_data(distort_data),
         .tx_data(axis_tx_data)
     );
+
 endmodule
