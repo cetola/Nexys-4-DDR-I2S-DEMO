@@ -120,7 +120,7 @@ module top #(
     distortion #(
         .DATA_WIDTH(24)
     ) m_dist (
-        .clk(axis_clk),
+        .clk(clk_out50),
         .distort_sw(sw_db[15]),
         .rx_data(volume_data),
         .tx_data(axis_tx_data)

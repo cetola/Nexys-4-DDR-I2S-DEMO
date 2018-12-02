@@ -82,7 +82,7 @@ module axis_volume_controller #(
         if (m_axis_valid == 1'b1)
             m_axis_data = data[m_select][MULTIPLIER_WIDTH+DATA_WIDTH-1:MULTIPLIER_WIDTH];
         else
-            m_axis_data = 'b0;
+            m_axis_data = m_axis_data;
             
     always@(posedge clk)
         if (s_new_packet == 1'b1)

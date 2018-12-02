@@ -27,10 +27,9 @@ module distortion#(
     input wire clk,
     input wire distort_sw,
     input  wire [DATA_WIDTH-1:0] rx_data,
-    output reg [DATA_WIDTH-1:0] tx_data = 1'b0
+    output reg [DATA_WIDTH-1:0] tx_data
 );
-    reg [DATA_WIDTH-1:0] data [1:0];
-    
+
     always@(posedge clk) begin
         if (distort_sw && rx_data[DATA_WIDTH-1] === 1'b1)
             tx_data <= ~rx_data;
