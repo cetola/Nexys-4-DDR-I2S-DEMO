@@ -55,6 +55,7 @@ module top #(
     
     wire [23:0] volume_data;
     wire [23:0] distort_data;
+    wire [23:0] swap_data;
 
 	wire resetn = (reset == RESET_POLARITY) ? 1'b0 : 1'b1;
 	
@@ -133,6 +134,15 @@ module top #(
         .clk(clk_out50),
         .swap_sw(sw_db[14]),
         .rx_data(distort_data),
+        .tx_data(swap_data)
+    );
+    
+   tremolo #(
+        .DATA_WIDTH(24)
+    ) m_tremelo (
+        .clk(clk_out50),
+        .tremolo_sw(sw_db[13]),
+        .rx_data(swap_data),
         .tx_data(axis_tx_data)
     );
 
